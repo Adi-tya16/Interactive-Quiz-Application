@@ -1,0 +1,227 @@
+const { useState, useEffect } = React;
+
+const quizData = [
+  {
+    question: "Which team won the IPL 2024 title?",
+    options: [
+      "Sunrisers Hyderabad",
+      "Royal Challengers Bangalore",
+      "Kolkata Knight Riders",
+      "Punjab Kings"
+    ],
+    answer: "Kolkata Knight Riders",
+  },
+  {
+    question: "Who was named the Most Valuable Player (MVP) of IPL 2024?",
+    options: [
+      "Virat Kohli",
+      "Sunil Narine",
+      "Harshal Patel",
+      "Nitish Kumar Reddy"
+    ],
+    answer: "Sunil Narine",
+  },
+  {
+    question: "Which player won the Orange Cap in IPL 2024?",
+    options: [
+      "Abhishek Sharma",
+      "Travis Head",
+      "Virat Kohli",
+      "Jake Fraser-McGurk"
+    ],
+    answer: "Virat Kohli",
+  },
+  {
+    question: "Who won the Purple Cap for most wickets in IPL 2024?",
+    options: [
+      "Rashid Khan",
+      "Yuzvendra Chahal",
+      "Harshal Patel",
+      "Jasprit Bumrah"
+    ],
+    answer: "Harshal Patel",
+  },
+  {
+    question: "How many teams participated in IPL 2024?",
+    options: [
+      "8",
+      "10",
+      "12",
+      "14"
+    ],
+    answer: "10",
+  },
+  {
+    question: "Which team was the runner-up in IPL 2024?",
+    options: [
+      "Delhi Capitals",
+      "Royal Challengers Bangalore",
+      "Sunrisers Hyderabad",
+      "Punjab Kings"
+    ],
+    answer: "Sunrisers Hyderabad",
+  },
+  {
+    question: "Who was the Player of the Match in the IPL 2024 final?",
+    options: [
+      "Venkatesh Iyer",
+      "Mitchell Starc",
+      "Sunil Narine",
+      "Rahmanullah Gurbaz"
+    ],
+    answer: "Mitchell Starc",
+  },
+  {
+    question: "Which stadium won the Pitch and Ground Award in IPL 2024?",
+    options: [
+      "Wankhede Stadium",
+      "Eden Gardens",
+      "Rajiv Gandhi International Stadium",
+      "M. Chinnaswamy Stadium"
+    ],
+    answer: "Rajiv Gandhi International Stadium",
+  },
+  {
+    question: "What was the prize amount for the winner of IPL 2024?",
+    options: [
+      "Rs. 15 crore",
+      "Rs. 20 crore",
+      "Rs. 25 crore",
+      "Rs. 12.5 crore"
+    ],
+    answer: "Rs. 20 crore",
+  },
+  {
+    question: "When was the first IPL tournament held?",
+    options: [
+      "2007",
+      "2008",
+      "2009",
+      "2010"
+    ],
+    answer: "2008",
+  },
+];
+
+function App() {
+  const [currentQuestion, setCurrentQuestion] = React.useState(0);
+  const [selectedOption, setSelectedOption] = React.useState(null);
+  const [score, setScore] = React.useState(0);
+  const [showFeedback, setShowFeedback] = React.useState(false);
+  const [isCorrect, setIsCorrect] = React.useState(false);
+  const [quizCompleted, setQuizCompleted] = React.useState(false);
+  const [timeLeft, setTimeLeft] = React.useState(15);
+
+  const totalQuestions = quizData.length;
+
+  React.useEffect(() => {
+    if (quizCompleted || showFeedback) {
+      return;
+    }
+    if (timeLeft === 0) {
+      handleTimeOut();
+      return;
+    }
+    const timerId = setTimeout(() => {
+      setTimeLeft(timeLeft - 1);
+    }, 1000);
+    return () => clearTimeout(timerId);
+  }, [timeLeft, quizCompleted, showFeedback]);
+
+  function handleOptionSelect(option) {
+    if (!showFeedback) {
+      setSelectedOption(option);
+    }
+  }
+
+  function handleNext() {
+    if (selectedOption === null) return; // Do nothing if no option selected
+
+    const correct = selectedOption === quizData[currentQuestion].answer;
+    setIsCorrect(correct);
+    if (correct) {
+      setScore(score + 1);
+    }
+    setShowFeedback(true);
+  }
+
+  function handleTimeOut() {
+    setIsCorrect(false);
+    setShowFeedback(true);
+  }
+
+  function handleNextQuestion() {
+    setShowFeedback(false);
+    setSelectedOption(null);
+    setTimeLeft(15);
+    if (currentQuestion + 1 < totalQuestions) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      setQuizCompleted(true);
+    }
+  }
+
+  function handleRestart() {
+    setCurrentQuestion(0);
+    setSelectedOption(null);
+    setScore(0);
+    setShowFeedback(false);
+    setIsCorrect(false);
+    setQuizCompleted(false);
+    setTimeLeft(15);
+  }
+
+  if (quizCompleted) {
+    return (
+      <div className="quiz-container">
+        <h2>Quiz Completed!</h2>
+        <p>Your final score is {score} out of {totalQuestions}.</p>
+        <button onClick={handleRestart}>Restart Quiz</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="quiz-container">
+      <h2>Interactive Quiz</h2>
+      <div className="progress">
+        Question {currentQuestion + 1} of {totalQuestions}
+      </div>
+      <div className="timer">Time left: {timeLeft} second{timeLeft !== 1 ? 's' : ''}</div>
+      <div className="question">{quizData[currentQuestion].question}</div>
+      <div className="options">
+        {quizData[currentQuestion].options.map((option) => (
+          <button
+            key={option}
+            className={`option-button ${
+              selectedOption === option ? "selected" : ""
+            }`}
+            onClick={() => handleOptionSelect(option)}
+            disabled={showFeedback}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+      {showFeedback ? (
+        <div className={`feedback ${isCorrect ? "correct" : "incorrect"}`}>
+          {isCorrect ? "Correct!" : `Incorrect! The correct answer is "${quizData[currentQuestion].answer}".`}
+        </div>
+      ) : null}
+      <div className="actions">
+        {!showFeedback ? (
+          <button
+            onClick={handleNext}
+            disabled={selectedOption === null}
+          >
+            Submit
+          </button>
+        ) : (
+          <button onClick={handleNextQuestion}>Next</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById("root"));
